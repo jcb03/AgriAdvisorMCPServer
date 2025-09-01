@@ -3,6 +3,7 @@ import base64
 from io import BytesIO
 from typing import Any, Dict, List, Optional
 from datetime import datetime, timedelta
+from auth import get_my_number,verify_bearer_token
 
 from fastmcp import FastMCP
 from pydantic import BaseModel
@@ -52,7 +53,63 @@ market_service = MarketService()
 # Initialize OpenAI client
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
-# 👇 ADD THE HEALTH CHECK ENDPOINT HERE - RIGHT AFTER INITIALIZATION
+# 🔑 REQUIRED PUCH AI TOOLS - ADD THESE FIRST
+@mcp.tool()
+async def validate() -> str:
+    """Validation tool required by Puch AI - returns phone number in country_code+number format"""
+    return get_my_number()
+
+@mcp.tool()
+async def about() -> Dict[str, str]:
+    """About tool required by Puch AI - returns server metadata"""
+    return {
+        "name": "Smart Agriculture Advisory",
+        "description": "AI-powered agricultural assistant for Indian farmers. Provides crop disease analysis, weather recommendations, market insights, planting schedules, sustainable farming practices, and personalized farming calendars. Supports Hindi language and focuses on Indian crops and agricultural conditions."
+    }
+
+# 🌾 AGRICULTURE TOOLS START HERE
+@mcp.tool()
+async def help() -> str:
+    """Get help and see all available Smart Agriculture tools"""
+    return """
+🌾 **Smart Agriculture Advisory - AI Farming Assistant for India**
+
+**मुख्य सुविधाएं (Main Features):**
+
+📸 **analyze_crop_disease** - फसल की तस्वीरों का विश्लेषण करें (Crop photo disease analysis)
+🌤️ **get_weather_recommendations** - मौसम आधारित सिंचाई सुझाव (Weather-based irrigation advice)
+📈 **get_market_analysis** - बाज़ार मूल्य और लाभ विश्लेषण (Market prices & profitability)
+📅 **calculate_planting_schedule** - बुआई और कटाई का समय (Planting & harvesting schedule)
+🌱 **suggest_sustainable_practices** - टिकाऊ खेती की विधियां (Sustainable farming methods)
+📋 **create_farming_calendar** - व्यक्तिगत खेती कैलेंडर (Personalized farming calendar)
+
+**भारतीय फसलें (Supported Indian Crops):**
+धान/चावल, गेहूं, कपास, गन्ना, टमाटर, प्याज और अन्य
+
+**उपयोग कैसे करें (How to Use):**
+1. WhatsApp पर Puch AI से जुड़ें
+2. फसल की तस्वीर भेजें रोग विश्लेषण के लिए
+3. "Delhi में धान के लिए मौसम सलाह" पूछें
+4. "Punjab में गेहूं का market rate" जानें
+
+**Example Commands:**
+- "Analyze this crop disease" (with photo)
+- "Weather advice for rice in Bihar"  
+- "Market analysis for wheat in Punjab"
+- "Create farming calendar for 5 acres"
+
+**विशेषताएं (Features):**
+✅ Hindi + English support
+✅ Indian weather data
+✅ Regional market prices  
+✅ Seasonal crop calendar
+✅ Government scheme info
+✅ Organic farming advice
+
+🚀 Built for Indian farmers with ❤️
+🏆 #BuildWithPuch 
+"""
+
 @mcp.tool()
 async def health_check() -> Dict[str, Any]:
     """Health check endpoint to test if server is running"""
@@ -77,7 +134,7 @@ async def health_check() -> Dict[str, Any]:
         }
     }
 
-# 👇 OPTIONALLY ADD THESE DEBUG ENDPOINTS TOO
+
 @mcp.tool()
 async def test_openai_connection() -> Dict[str, Any]:
     """Test OpenAI API connection"""
