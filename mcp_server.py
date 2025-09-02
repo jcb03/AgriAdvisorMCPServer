@@ -431,8 +431,4 @@ async def help() -> str:
 🏆 #BuildWithPuch 
 """
 
-# REMOVE THE AUTHENTICATION MIDDLEWARE - IT'S BLOCKING PUCH AI
-# Let FastMCP handle authentication internally
-
-# Export the mcp server
 __all__ = ["mcp"]
