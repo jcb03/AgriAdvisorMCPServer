@@ -1,4 +1,4 @@
-# 🌾 Smart Agriculture Advisory - MCP Server
+# 🌾AgriAdvisor (Smart Agriculture Advisory) - MCP Server
 
 > AI-powered agricultural assistant AgriAdvisor for Indian farmers via WhatsApp through Puch AI
 
