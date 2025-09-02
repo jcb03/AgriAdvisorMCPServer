@@ -431,4 +431,24 @@ async def help() -> str:
 🏆 #BuildWithPuch 
 """
 
+@mcp.tool()
+async def health() -> Dict[str, Any]:
+    """Health check endpoint for monitoring and keep-alive"""
+    return {
+        "status": "healthy",
+        "service": "AgriAdvisor MCP Server",
+        "timestamp": datetime.now().isoformat(),
+        "uptime": "server running",
+        "tools_count": 7,
+        "supported_crops": len(INDIAN_CROPS),
+        "version": "1.0.0",
+        "features": [
+            "Crop Disease Analysis",
+            "Weather Recommendations", 
+            "Market Analysis",
+            "Planting Schedule",
+            "Farming Calendar"
+        ]
+    }
+
 __all__ = ["mcp"]

@@ -18,13 +18,8 @@ if api_key:
 import uvicorn
 from mcp_server import mcp
 
-# Get the pure MCP app
+# Get the pure MCP app - NO CUSTOM ROUTES
 app = mcp.http_app()
-
-# 🏥 ADD HEALTH ENDPOINT
-@app.get("/health")
-async def health_check():
-    return {"status": "healthy", "service": "agriculture-mcp", "timestamp": time.time()}
 
 # 🔄 IMPROVED KEEP-ALIVE FUNCTION
 def keep_server_alive():
@@ -39,34 +34,37 @@ def keep_server_alive():
             try:
                 time.sleep(600)  # 10 minutes (safer interval)
                 
-                # Try multiple endpoints
-                endpoints = ["/health", "/", ""]
-                success = False
-                
-                for endpoint in endpoints:
-                    try:
-                        url = f"{base_url}{endpoint}".rstrip('/')
-                        response = requests.get(url, timeout=30)
-                        
-                        if response.status_code in [200, 202]:
-                            print(f"🔄 Keep-alive SUCCESS: {response.status_code} - {url}")
-                            consecutive_failures = 0
-                            success = True
-                            break
-                        else:
-                            print(f"⚠️ Keep-alive WARNING: {response.status_code} - {url}")
-                            
-                    except requests.exceptions.RequestException as e:
-                        print(f"⚠️ Keep-alive ERROR for {endpoint}: {str(e)}")
-                        continue
-                
-                if not success:
-                    consecutive_failures += 1
-                    print(f"❌ Keep-alive FAILED (attempt {consecutive_failures}/{max_failures})")
+                # Try root endpoint (MCP servers respond to root with tools info)
+                try:
+                    response = requests.post(
+                        base_url,
+                        headers={
+                            "Authorization": "Bearer puch2024",
+                            "Content-Type": "application/json"
+                        },
+                        json={
+                            "jsonrpc": "2.0",
+                            "method": "tools/call",
+                            "params": {"name": "validate", "arguments": {}},
+                            "id": 1
+                        },
+                        timeout=30
+                    )
                     
-                    if consecutive_failures >= max_failures:
-                        print("🚨 Multiple keep-alive failures - server may be down")
-                        consecutive_failures = 0  # Reset counter
+                    if response.status_code in [200, 202]:
+                        print(f"🔄 Keep-alive SUCCESS: {response.status_code}")
+                        consecutive_failures = 0
+                    else:
+                        print(f"⚠️ Keep-alive WARNING: {response.status_code}")
+                        consecutive_failures += 1
+                        
+                except requests.exceptions.RequestException as e:
+                    print(f"⚠️ Keep-alive ERROR: {str(e)}")
+                    consecutive_failures += 1
+                
+                if consecutive_failures >= max_failures:
+                    print("🚨 Multiple keep-alive failures - server may be down")
+                    consecutive_failures = 0  # Reset counter
                         
             except Exception as e:
                 print(f"❌ Keep-alive EXCEPTION: {str(e)}")
@@ -80,7 +78,7 @@ def keep_server_alive():
 
 # 🛡️ GRACEFUL SHUTDOWN HANDLER
 def signal_handler(sig, frame):
-    print(f"\n🛑 Received {signal.Signals(sig).name} - Shutting down gracefully...")
+    print(f"\n🛑 Received signal {sig} - Shutting down gracefully...")
     sys.exit(0)
 
 # Register signal handlers
@@ -88,7 +86,7 @@ signal.signal(signal.SIGTERM, signal_handler)
 signal.signal(signal.SIGINT, signal_handler)
 
 if __name__ == "__main__":
-    # Start keep-alive service
+    # Start keep-alive service BEFORE starting server
     keep_alive_thread = keep_server_alive()
     
     port = int(os.getenv("PORT", 8000))
