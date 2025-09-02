@@ -22,12 +22,12 @@ app = mcp.http_app()
 # KEEP-ALIVE FUNCTION
 def keep_server_alive():
     """Simple keep-alive function"""
-    url = "https://agriadvisormcp.onrender.com"  # Your actual URL
+    url = "https://agriadvisormcp.onrender.com"  
     
     def ping_server():
         while True:
             try:
-                time.sleep(720)  # 14 minutes
+                time.sleep(720)  # 12 minutes
                 response = requests.get(f"{url}", timeout=30)
                 print(f"🔄 Keep-alive: {response.status_code}")
             except:
